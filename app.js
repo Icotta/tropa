@@ -100,17 +100,8 @@ async function registerEmail() {
 
 async function loginGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    await auth.signInWithPopup(provider);
-  } catch (e) {
-    console.error(e);
-    // Пробуем через редирект (для телефона)
-    try {
-      await auth.signInWithRedirect(provider);
-    } catch(e2) {
-      showError('Ошибка входа через Google');
-    }
-  }
+  // Всегда через редирект — быстро и надёжно на телефоне
+  await auth.signInWithRedirect(provider);
 }
 
 async function loginAnon() {
