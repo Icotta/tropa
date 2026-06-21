@@ -552,6 +552,6 @@ document.querySelectorAll('.tab').forEach(t => {
 });
 
 // СТАРТ
-document.getElementById('modal').classList.add('hidden');
+document.getElementById('modal').style.display = 'none';
 showAuth();
 console.log('🧝‍♀️ ТРОПА готова!');
