@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Тропа — Пиксельное Комьюнити</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🧝‍♀️</text></svg>">
+  
+  <!-- Firebase SDK для браузера -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #0d0d1a;
+      font-family: 'Courier New', monospace;
+      color: #e0d6c8;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(ellipse at 50% 0%, rgba(100, 100, 255, 0.1) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 16px 16px, 16px 16px;
+      padding: 8px;
+      max-width: 500px;
+      margin: 0 auto;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .pixel-box {
+      border: 3px solid #5a4a6a;
+      box-shadow: inset -3px -3px 0 #1a1020, inset 3px 3px 0 #7a6a8a;
+      background: #1a1525;
+      padding: 15px;
+      margin: 8px 0;
+      border-radius: 2px;
+    }
+
+    .hero-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      flex-shrink: 0;
+    }
+
+    .sprite {
+      width: 100%;
+      height: 100%;
+      background: #2a1a3a;
+      border: 3px solid #6a5a7a;
+      box-shadow: inset -3px -3px 0 #1a0a20, inset 3px 3px 0 #8a7a9a;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+    }
+
+    .px {
+      width: 100%;
+      height: 100%;
+      transition: all 0.3s;
+    }
+
+    .mood-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      font-size: 22px;
+      animation: bounce 1s infinite;
+      filter: drop-shadow(0 0 4px rgba(255,200,0,0.6));
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .stats {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .stat-line { margin: 3px 0; }
+
+    .stat-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .bar-outer {
+      background: #0a0510;
+      border: 2px solid #3a2a4a;
+      height: 10px;
+      margin-top: 2px;
+    }
+
+    .bar-inner {
+      height: 100%;
+      transition: width 0.6s ease;
+    }
+
+    .bar-hp { background: linear-gradient(180deg, #ff6b6b, #cc2222); }
+    .bar-mana { background: linear-gradient(180deg, #6ba3ff, #2244cc); }
+    .bar-skill { background: linear-gradient(180deg, #ffd700, #cc8800); }
+
+    .level-badge {
+      background: #ffd700;
+      color: #000;
+      padding: 2px 8px;
+      font-weight: bold;
+      font-size: 13px;
+      display: inline-block;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 4px;
+      background: #1a1025;
+      border: 2px solid #3a2a4a;
+      text-align: center;
+      cursor: pointer;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: 0.2s;
+      border-radius: 2px;
+    }
+
+    .tab.active {
+      background: #2a1a3a;
+      border-color: #ffd700;
+      color: #ffd700;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+
+    .quest-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      margin: 5px 0;
+      background: #151025;
+      border: 2px solid #3a2a4a;
+      cursor: pointer;
+      transition: 0.15s;
+      border-radius: 2px;
+    }
+
+    .quest-card:active {
+      transform: scale(0.97);
+      background: #1f1535;
+    }
+
+    .quest-card.done {
+      opacity: 0.5;
+      border-color: #2a4a2a;
+      background: #0a150a;
+    }
+
+    .quest-card.done .quest-name {
+      text-decoration: line-through;
+    }
+
+    .quest-icon {
+      font-size: 26px;
+      width: 34px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .quest-info { flex: 1; }
+
+    .quest-name {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .quest-meta {
+      font-size: 9px;
+      color: #9988aa;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .quest-reward { color: #ffd700; font-size: 10px; }
+
+    .btn {
+      background: #2a1a3a;
+      border: 2px solid #5a4a6a;
+      color: #e0d6c8;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px;
+      cursor: pointer;
+      box-shadow: inset -2px -2px 0 #1a0a20, inset 2px 2px 0 #6a5a7a;
+      transition: 0.1s;
+      width: 100%;
+      margin: 4px 0;
+      font-size: 12px;
+    }
+
+    .btn:active {
+      box-shadow: inset 2px 2px 0 #1a0a20, inset -2px -2px 0 #6a5a7a;
+      transform: translate(1px, 1px);
+    }
+
+    .btn.green { border-color: #4a8a4a; background: #1a2a1a; color: #aaffaa; }
+    .btn.blue { border-color: #4a6a8a; background: #1a2a3a; color: #aaccff; }
+    .btn.gold { border-color: #aa8800; background: #2a1a00; color: #ffd700; }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      background: #0a0510;
+      border: 2px solid #3a2a4a;
+      color: #e0d6c8;
+      font-family: 'Courier New', monospace;
+      margin: 4px 0;
+      font-size: 13px;
+    }
+
+    textarea { resize: vertical; min-height: 40px; }
+
+    .hidden { display: none; }
+
+    .log-box {
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 9px;
+      line-height: 1.4;
+      color: #9988aa;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #2a1a3a;
+      font-size: 11px;
+    }
+
+    .player-row .me { color: #ffd700; }
+
+    .chat-msg {
+      padding: 3px 6px;
+      margin: 2px 0;
+      font-size: 10px;
+      background: #0f0a1a;
+      border-left: 2px solid #ffd700;
+    }
+
+    .chat-msg .author { color: #ffd700; font-weight: bold; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: #1a1525;
+      border: 3px solid #5a4a6a;
+      padding: 15px;
+      max-width: 380px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 { color: #ffd700; margin-bottom: 8px; text-align: center; }
+
+    h1 {
+      text-align: center;
+      font-size: 16px;
+      color: #ffd700;
+      text-shadow: 2px 2px 0 #000;
+      margin: 8px 0;
+      letter-spacing: 2px;
+    }
+
+    .inline-btn {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 10px;
+      cursor: pointer;
+      background: #2a1a3a;
+      border: 1px solid #5a4a6a;
+      color: #e0d6c8;
+      font-family: 'Courier New', monospace;
+    }
+
+    h2 {
+      font-size: 13px;
+      color: #ffd700;
+      margin: 8px 0 4px;
+      border-bottom: 1px solid #3a2a4a;
+      padding-bottom: 4px;
+    }
+
+    .auth-screen {
+      text-align: center;
+    }
+
+    .auth-screen h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .auth-screen .btn {
+      margin: 6px 0;
+      font-size: 13px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      color: #5a4a6a;
+      font-size: 10px;
+      margin: 10px 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #3a2a4a;
+    }
+
+    .divider span { margin: 0 10px; }
+  </style>
+</head>
+<body>
+
+  <h1>🧝‍♀️ ТРОПА</h1>
+
+  <!-- ЭКРАН АВТОРИЗАЦИИ -->
+  <div class="pixel-box auth-screen" id="authScreen">
+    <h2>✨ Вход в комьюнити</h2>
+    <input type="email" id="emailInput" placeholder="📧 Email">
+    <input type="password" id="passInput" placeholder="🔒 Пароль">
+    <button class="btn gold" onclick="loginEmail()">🔐 Войти</button>
+    <button class="btn" onclick="registerEmail()">✨ Создать аккаунт</button>
+    <div class="divider"><span>или</span></div>
+    <button class="btn blue" onclick="loginGoogle()">🔵 Войти через Google</button>
+    <button class="btn" onclick="loginAnon()">👻 Попробовать без регистрации</button>
+    <p id="authError" style="color:#ff6b6b; font-size:10px; margin-top:8px;"></p>
+  </div>
+
+  <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
+  <div id="mainApp" class="hidden">
+    <!-- Статус -->
+    <div class="pixel-box" style="text-align:center; font-size:10px; padding:6px;" id="authBox"></div>
+
+    <!-- Персонаж -->
+    <div class="pixel-box hero-container">
+      <div class="avatar-wrapper">
+        <div class="sprite" id="sprite"></div>
+        <div class="mood-badge" id="moodEmoji">😊</div>
+      </div>
+      <div class="stats">
+        <span class="level-badge">УР. <span id="lvl">1</span></span>
+        <span style="font-size:11px;" id="title">🌱 Росток</span>
+        <div class="stat-line">
+          <div class="stat-label"><span>❤️ Здоровье</span><span id="hpText">60/60</span></div>
+          <div class="bar-outer"><div class="bar-inner bar-hp" id="hpBar" style="width:100%"></div></div>
+        </div>
+        <div class="stat-line">
+          <div class="stat-label"><span>💙 Мана</span><span id="manaText">40/40</span></div>
+          <div class="bar-outer"><div class="bar-inner bar-mana" id="manaBar" style="width:100%"></div></div>
+        </div>
+        <div class="stat-line">
+          <div class="stat-label"><span>⚡ Креатив</span><span id="skillText">10/100</span></div>
+          <div class="bar-outer"><div class="bar-inner bar-skill" id="skillBar" style="width:10%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Вкладки -->
+    <div class="tabs">
+      <div class="tab active" data-tab="health">🏃‍♀️ Моё</div>
+      <div class="tab" data-tab="blog">👥 Челленджи</div>
+      <div class="tab" data-tab="art">🌍 Лидеры</div>
+    </div>
+
+    <!-- Контент -->
+    <div class="pixel-box" id="mainContent"></div>
+
+    <!-- Модальное окно -->
+    <div class="modal-overlay hidden" id="modal">
+      <div class="modal" id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "Тропа — Пиксельное Комьюнити",
+  "short_name": "Тропа",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "icons": [{
+    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231a1a2e' rx='10'/><text y='68' x='50' text-anchor='middle' font-size='55'>🧝‍♀️</text></svg>",
+    "sizes": "any"
+  }]
+}
