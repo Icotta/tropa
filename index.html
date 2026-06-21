@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Тропа — Пиксельное Комьюнити</title>
+  <title>Тропа к Королю</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1a1a2e">
+  <meta name="theme-color" content="#1a2e1a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🧝‍♀️</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>👑</text></svg>">
   
-  <!-- Firebase SDK для браузера -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -19,405 +18,559 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-      background: #0d0d1a;
-      font-family: 'Courier New', monospace;
-      color: #e0d6c8;
+      background: linear-gradient(180deg, #0d1a0d 0%, #142014 30%, #1a2e1a 100%);
+      font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+      color: #d4c8b8;
       min-height: 100vh;
-      background-image: 
-        radial-gradient(ellipse at 50% 0%, rgba(100, 100, 255, 0.1) 0%, transparent 60%),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 100% 100%, 16px 16px, 16px 16px;
-      padding: 8px;
-      max-width: 500px;
+      padding: 12px;
+      max-width: 480px;
       margin: 0 auto;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
       -webkit-user-select: none;
+      background-attachment: fixed;
     }
 
-    .pixel-box {
-      border: 3px solid #5a4a6a;
-      box-shadow: inset -3px -3px 0 #1a1020, inset 3px 3px 0 #7a6a8a;
-      background: #1a1525;
-      padding: 15px;
-      margin: 8px 0;
-      border-radius: 2px;
+    .card {
+      background: rgba(26, 38, 26, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(100, 160, 100, 0.25);
+      border-radius: 20px;
+      padding: 16px;
+      margin: 10px 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 1px 3px rgba(100,160,100,0.1);
+      transition: all 0.2s ease;
     }
 
-    .hero-container {
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      color: #c8e6c8;
+      margin: 4px 0;
+      letter-spacing: 2px;
+      font-weight: 700;
+      text-shadow: 0 0 20px rgba(100,200,100,0.3);
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 10px;
+      color: #7a9a7a;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* Герой */
+    .hero-section {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
-    .avatar-wrapper {
+    .hero-avatar {
       position: relative;
-      width: 90px;
-      height: 90px;
+      width: 100px;
+      height: 100px;
       flex-shrink: 0;
     }
 
-    .sprite {
+    .hero-sprite {
       width: 100%;
       height: 100%;
-      background: #2a1a3a;
-      border: 3px solid #6a5a7a;
-      box-shadow: inset -3px -3px 0 #1a0a20, inset 3px 3px 0 #8a7a9a;
+      background: rgba(20, 30, 20, 0.8);
+      border: 2px solid rgba(100, 160, 100, 0.4);
+      border-radius: 50%;
       display: grid;
       grid-template-columns: repeat(10, 1fr);
       grid-template-rows: repeat(10, 1fr);
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(100, 160, 100, 0.2);
     }
 
     .px {
       width: 100%;
       height: 100%;
-      transition: all 0.3s;
+      transition: all 0.4s ease;
     }
 
-    .mood-badge {
+    .crown-badge {
       position: absolute;
-      top: -8px;
-      right: -8px;
-      font-size: 22px;
-      animation: bounce 1s infinite;
-      filter: drop-shadow(0 0 4px rgba(255,200,0,0.6));
+      top: -6px;
+      right: -6px;
+      font-size: 26px;
+      filter: drop-shadow(0 0 8px rgba(255,215,0,0.7));
+      animation: float 2s ease-in-out infinite;
     }
 
-    @keyframes bounce {
+    @keyframes float {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
+      50% { transform: translateY(-5px); }
     }
 
-    .stats {
+    .hero-info {
       flex: 1;
       min-width: 140px;
     }
 
-    .stat-line { margin: 3px 0; }
-
-    .stat-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .bar-outer {
-      background: #0a0510;
-      border: 2px solid #3a2a4a;
-      height: 10px;
-      margin-top: 2px;
-    }
-
-    .bar-inner {
-      height: 100%;
-      transition: width 0.6s ease;
-    }
-
-    .bar-hp { background: linear-gradient(180deg, #ff6b6b, #cc2222); }
-    .bar-mana { background: linear-gradient(180deg, #6ba3ff, #2244cc); }
-    .bar-skill { background: linear-gradient(180deg, #ffd700, #cc8800); }
-
-    .level-badge {
-      background: #ffd700;
-      color: #000;
-      padding: 2px 8px;
-      font-weight: bold;
-      font-size: 13px;
+    .title-badge {
       display: inline-block;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 4px;
+      background: linear-gradient(135deg, #4a8a4a, #2a5a2a);
+      color: #c8e6c8;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
       margin-bottom: 6px;
     }
 
-    .tab {
+    .title-badge.king {
+      background: linear-gradient(135deg, #ffd700, #aa8800);
+      color: #1a1a00;
+      box-shadow: 0 0 20px rgba(255,215,0,0.4);
+    }
+
+    .stat-mini {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 3px 0;
+      font-size: 11px;
+    }
+
+    .stat-icon { width: 18px; text-align: center; flex-shrink: 0; }
+
+    .bar-mini {
       flex: 1;
-      padding: 8px 4px;
-      background: #1a1025;
-      border: 2px solid #3a2a4a;
+      height: 6px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill-mini {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .bar-body { background: linear-gradient(90deg, #e06060, #ff9090); }
+    .bar-mind { background: linear-gradient(90deg, #6090e0, #90b0ff); }
+    .bar-soul { background: linear-gradient(90deg, #e0c040, #ffe080); }
+
+    /* Советники */
+    .advisors-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .advisor-card {
+      flex: 1;
       text-align: center;
+      background: rgba(20, 30, 20, 0.6);
+      border-radius: 16px;
+      padding: 10px 6px;
       cursor: pointer;
-      font-size: 10px;
-      text-transform: uppercase;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+      position: relative;
+    }
+
+    .advisor-card:hover {
+      border-color: rgba(100, 160, 100, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .advisor-card.active-advisor {
+      border-color: #ffd700 !important;
+      box-shadow: 0 0 15px rgba(255,215,0,0.2);
+      background: rgba(30, 40, 20, 0.8);
+    }
+
+    .advisor-icon {
+      font-size: 32px;
+      margin-bottom: 2px;
+      transition: transform 0.3s;
+    }
+
+    .advisor-card:hover .advisor-icon {
+      transform: scale(1.1);
+    }
+
+    .advisor-name {
+      font-size: 9px;
+      color: #8aaa8a;
       letter-spacing: 1px;
-      transition: 0.2s;
-      border-radius: 2px;
+      text-transform: uppercase;
     }
 
-    .tab.active {
-      background: #2a1a3a;
-      border-color: #ffd700;
+    .advisor-level {
+      font-size: 10px;
       color: #ffd700;
-      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+      font-weight: bold;
     }
 
+    .advisor-mood {
+      font-size: 16px;
+      position: absolute;
+      top: -4px;
+      right: 4px;
+    }
+
+    .advisor-xp-bar {
+      height: 3px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .advisor-xp-fill {
+      height: 100%;
+      background: #ffd700;
+      border-radius: 10px;
+      transition: width 0.5s;
+    }
+
+    /* Квесты */
     .quest-card {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px;
-      margin: 5px 0;
-      background: #151025;
-      border: 2px solid #3a2a4a;
+      padding: 12px;
+      margin: 6px 0;
+      background: rgba(20, 30, 20, 0.5);
+      border-radius: 14px;
       cursor: pointer;
-      transition: 0.15s;
-      border-radius: 2px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
     }
 
     .quest-card:active {
-      transform: scale(0.97);
-      background: #1f1535;
+      transform: scale(0.98);
+      background: rgba(30, 45, 30, 0.6);
     }
 
     .quest-card.done {
-      opacity: 0.5;
-      border-color: #2a4a2a;
-      background: #0a150a;
+      opacity: 0.45;
+      border-color: rgba(100, 160, 100, 0.2);
     }
 
     .quest-card.done .quest-name {
       text-decoration: line-through;
+      color: #6a8a6a;
+    }
+
+    .quest-card.suggested {
+      border-color: rgba(255, 215, 0, 0.3);
+      background: rgba(30, 35, 20, 0.5);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 5px rgba(255,215,0,0.1); }
+      50% { box-shadow: 0 0 15px rgba(255,215,0,0.25); }
     }
 
     .quest-icon {
-      font-size: 26px;
-      width: 34px;
+      font-size: 28px;
+      width: 38px;
       text-align: center;
       flex-shrink: 0;
     }
 
     .quest-info { flex: 1; }
-
-    .quest-name {
+    .quest-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+    .quest-from { font-size: 9px; color: #8aaa8a; }
+    .quest-reward { color: #ffd700; font-size: 10px; font-weight: 500; }
+    .quest-suggested-badge {
+      display: inline-block;
+      background: #ffd700;
+      color: #1a1a00;
+      font-size: 8px;
+      padding: 1px 6px;
+      border-radius: 10px;
       font-weight: bold;
-      font-size: 13px;
-      margin-bottom: 2px;
-    }
-
-    .quest-meta {
-      font-size: 9px;
-      color: #9988aa;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .quest-reward { color: #ffd700; font-size: 10px; }
-
-    .btn {
-      background: #2a1a3a;
-      border: 2px solid #5a4a6a;
-      color: #e0d6c8;
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      text-transform: uppercase;
       letter-spacing: 1px;
-      padding: 10px;
+    }
+
+    /* Кнопки */
+    .btn {
+      background: rgba(40, 70, 40, 0.7);
+      border: 1px solid rgba(100, 160, 100, 0.3);
+      color: #c8e6c8;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 11px;
       cursor: pointer;
-      box-shadow: inset -2px -2px 0 #1a0a20, inset 2px 2px 0 #6a5a7a;
-      transition: 0.1s;
+      border-radius: 14px;
+      transition: all 0.2s;
       width: 100%;
       margin: 4px 0;
       font-size: 12px;
+      text-transform: uppercase;
     }
 
     .btn:active {
-      box-shadow: inset 2px 2px 0 #1a0a20, inset -2px -2px 0 #6a5a7a;
-      transform: translate(1px, 1px);
+      transform: scale(0.97);
+      background: rgba(60, 100, 60, 0.5);
     }
 
-    .btn.green { border-color: #4a8a4a; background: #1a2a1a; color: #aaffaa; }
-    .btn.blue { border-color: #4a6a8a; background: #1a2a3a; color: #aaccff; }
-    .btn.gold { border-color: #aa8800; background: #2a1a00; color: #ffd700; }
+    .btn.gold {
+      background: rgba(60, 40, 10, 0.7);
+      border-color: rgba(200, 150, 50, 0.4);
+      color: #ffe8a0;
+    }
 
-    input, textarea, select {
+    .btn.green {
+      background: rgba(20, 60, 30, 0.7);
+      border-color: rgba(80, 180, 100, 0.4);
+      color: #b0ffc0;
+    }
+
+    .btn.small {
+      width: auto;
+      padding: 6px 14px;
+      font-size: 10px;
+      display: inline-block;
+      border-radius: 10px;
+    }
+
+    input, select, textarea {
       width: 100%;
-      padding: 8px;
-      background: #0a0510;
-      border: 2px solid #3a2a4a;
-      color: #e0d6c8;
-      font-family: 'Courier New', monospace;
+      padding: 10px;
+      background: rgba(10, 20, 10, 0.6);
+      border: 1px solid rgba(100, 160, 100, 0.3);
+      color: #d4c8b8;
+      font-family: inherit;
       margin: 4px 0;
       font-size: 13px;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
     }
 
-    textarea { resize: vertical; min-height: 40px; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(150, 200, 150, 0.5);
+    }
+
+    textarea { resize: vertical; min-height: 50px; }
 
     .hidden { display: none !important; }
 
     .log-box {
-      max-height: 120px;
+      max-height: 100px;
       overflow-y: auto;
       font-size: 9px;
-      line-height: 1.4;
-      color: #9988aa;
+      line-height: 1.5;
+      color: #7a9a7a;
+    }
+
+    /* Модальное окно */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .modal {
+      background: linear-gradient(180deg, #1a2e1a, #142014);
+      border: 1px solid rgba(100, 160, 100, 0.3);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 380px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .modal h3 { 
+      color: #c8e6c8; 
+      margin-bottom: 10px; 
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .modal h4 {
+      color: #ffd700;
+      margin: 10px 0 4px;
+      font-size: 12px;
     }
 
     .player-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
-      border-bottom: 1px solid #2a1a3a;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(100,160,100,0.1);
       font-size: 11px;
     }
 
-    .player-row .me { color: #ffd700; }
+    .player-row.me { color: #ffd700; font-weight: bold; }
 
     .chat-msg {
-      padding: 3px 6px;
+      padding: 4px 8px;
       margin: 2px 0;
       font-size: 10px;
-      background: #0f0a1a;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
       border-left: 2px solid #ffd700;
     }
 
     .chat-msg .author { color: #ffd700; font-weight: bold; }
 
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-
-    .modal {
-      background: #1a1525;
-      border: 3px solid #5a4a6a;
-      padding: 15px;
-      max-width: 380px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    .modal h3 { color: #ffd700; margin-bottom: 8px; text-align: center; }
-
-    h1 {
-      text-align: center;
-      font-size: 16px;
-      color: #ffd700;
-      text-shadow: 2px 2px 0 #000;
-      margin: 8px 0;
-      letter-spacing: 2px;
-    }
-
-    .inline-btn {
-      display: inline-block;
-      padding: 4px 10px;
-      font-size: 10px;
-      cursor: pointer;
-      background: #2a1a3a;
-      border: 1px solid #5a4a6a;
-      color: #e0d6c8;
-      font-family: 'Courier New', monospace;
-    }
-
-    h2 {
-      font-size: 13px;
-      color: #ffd700;
-      margin: 8px 0 4px;
-      border-bottom: 1px solid #3a2a4a;
-      padding-bottom: 4px;
-    }
-
-    .auth-screen {
-      text-align: center;
-    }
-
-    .auth-screen h2 {
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
-
-    .auth-screen .btn {
-      margin: 6px 0;
-      font-size: 13px;
-    }
+    /* Аутентификация */
+    .auth-screen { text-align: center; }
+    .auth-screen h2 { font-size: 18px; margin-bottom: 12px; color: #c8e6c8; }
+    .auth-screen .btn { margin: 5px 0; font-size: 13px; }
 
     .divider {
       display: flex;
       align-items: center;
-      color: #5a4a6a;
-      font-size: 10px;
-      margin: 10px 0;
+      color: #5a7a5a;
+      font-size: 9px;
+      margin: 8px 0;
     }
 
     .divider::before, .divider::after {
       content: '';
       flex: 1;
-      border-bottom: 1px solid #3a2a4a;
+      border-bottom: 1px solid rgba(100,160,100,0.2);
     }
 
     .divider span { margin: 0 10px; }
+
+    .error-msg {
+      color: #ff8080;
+      font-size: 10px;
+      margin-top: 6px;
+      min-height: 16px;
+    }
+
+    /* Табы */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      background: rgba(20,30,20,0.5);
+      border: 1px solid rgba(100,160,100,0.2);
+      text-align: center;
+      cursor: pointer;
+      font-size: 10px;
+      letter-spacing: 1px;
+      border-radius: 12px;
+      transition: all 0.2s;
+      color: #8aaa8a;
+    }
+
+    .tab.active {
+      background: rgba(40,70,40,0.6);
+      border-color: #ffd700;
+      color: #ffd700;
+      box-shadow: 0 0 12px rgba(255,215,0,0.15);
+    }
+
+    /* Плавные переходы */
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 
-  <h1>🧝‍♀️ ТРОПА</h1>
+  <h1>👑 ТРОПА К КОРОЛЮ</h1>
+  <p class="subtitle">Слушай советников · Прокачивай путь · Стань королём</p>
 
-  <!-- ЭКРАН АВТОРИЗАЦИИ -->
-  <div class="pixel-box auth-screen" id="authScreen">
-    <h2>✨ Вход в комьюнити</h2>
+  <!-- Экран входа -->
+  <div class="card auth-screen" id="authScreen">
+    <h2>✨ Войти в королевство</h2>
     <input type="email" id="emailInput" placeholder="📧 Email">
     <input type="password" id="passInput" placeholder="🔒 Пароль">
     <button class="btn gold" onclick="loginEmail()">🔐 Войти</button>
     <button class="btn" onclick="registerEmail()">✨ Создать аккаунт</button>
     <div class="divider"><span>или</span></div>
-    <button class="btn blue" onclick="loginGoogle()">🔵 Войти через Google</button>
-    <button class="btn" onclick="loginAnon()">👻 Попробовать без регистрации</button>
-    <p id="authError" style="color:#ff6b6b; font-size:10px; margin-top:8px;"></p>
+    <button class="btn green" onclick="loginGoogle()">🔵 Google</button>
+    <button class="btn" onclick="loginAnon()">👻 Быстрый вход</button>
+    <p class="error-msg" id="authError"></p>
   </div>
 
-  <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
+  <!-- Основной интерфейс -->
   <div id="mainApp" class="hidden">
-    <!-- Статус -->
-    <div class="pixel-box" style="text-align:center; font-size:10px; padding:6px;" id="authBox"></div>
+    
+    <!-- Статус-бар -->
+    <div class="card" style="text-align:center; font-size:9px; padding:6px;" id="authBox"></div>
 
-    <!-- Персонаж -->
-    <div class="pixel-box hero-container">
-      <div class="avatar-wrapper">
-        <div class="sprite" id="sprite"></div>
-        <div class="mood-badge" id="moodEmoji">😊</div>
+    <!-- Герой + Советники -->
+    <div class="card hero-section">
+      <div class="hero-avatar">
+        <div class="hero-sprite" id="heroSprite"></div>
+        <div class="crown-badge" id="crownBadge"></div>
       </div>
-      <div class="stats">
-        <span class="level-badge">УР. <span id="lvl">1</span></span>
-        <span style="font-size:11px;" id="title">🌱 Росток</span>
-        <div class="stat-line">
-          <div class="stat-label"><span>❤️ Здоровье</span><span id="hpText">60/60</span></div>
-          <div class="bar-outer"><div class="bar-inner bar-hp" id="hpBar" style="width:100%"></div></div>
-        </div>
-        <div class="stat-line">
-          <div class="stat-label"><span>💙 Мана</span><span id="manaText">40/40</span></div>
-          <div class="bar-outer"><div class="bar-inner bar-mana" id="manaBar" style="width:100%"></div></div>
-        </div>
-        <div class="stat-line">
-          <div class="stat-label"><span>⚡ Креатив</span><span id="skillText">10/100</span></div>
-          <div class="bar-outer"><div class="bar-inner bar-skill" id="skillBar" style="width:10%"></div></div>
-        </div>
+      <div class="hero-info">
+        <span class="title-badge" id="titleBadge">🌱 Путник</span>
+        <div class="stat-mini"><span class="stat-icon">❤️</span><div class="bar-mini"><div class="bar-fill-mini bar-body" id="bodyBar" style="width:20%"></div></div><span style="font-size:9px;" id="bodyText">1 ур.</span></div>
+        <div class="stat-mini"><span class="stat-icon">💙</span><div class="bar-mini"><div class="bar-fill-mini bar-mind" id="mindBar" style="width:20%"></div></div><span style="font-size:9px;" id="mindText">1 ур.</span></div>
+        <div class="stat-mini"><span class="stat-icon">💛</span><div class="bar-mini"><div class="bar-fill-mini bar-soul" id="soulBar" style="width:20%"></div></div><span style="font-size:9px;" id="soulText">1 ур.</span></div>
+      </div>
+    </div>
+
+    <!-- Три советника -->
+    <div class="advisors-row" id="advisorsRow">
+      <div class="advisor-card active-advisor" data-advisor="knight">
+        <div class="advisor-mood" id="knightMood">😊</div>
+        <div class="advisor-icon">🗡️</div>
+        <div class="advisor-name">Рыцарь</div>
+        <div class="advisor-level" id="knightLevel">Ур.1</div>
+        <div class="advisor-xp-bar"><div class="advisor-xp-fill" id="knightXp" style="width:10%"></div></div>
+      </div>
+      <div class="advisor-card" data-advisor="maester">
+        <div class="advisor-mood" id="maesterMood">😊</div>
+        <div class="advisor-icon">📚</div>
+        <div class="advisor-name">Мейстер</div>
+        <div class="advisor-level" id="maesterLevel">Ур.1</div>
+        <div class="advisor-xp-bar"><div class="advisor-xp-fill" id="maesterXp" style="width:10%"></div></div>
+      </div>
+      <div class="advisor-card" data-advisor="bard">
+        <div class="advisor-mood" id="bardMood">😊</div>
+        <div class="advisor-icon">🎨</div>
+        <div class="advisor-name">Бард</div>
+        <div class="advisor-level" id="bardLevel">Ур.1</div>
+        <div class="advisor-xp-bar"><div class="advisor-xp-fill" id="bardXp" style="width:10%"></div></div>
       </div>
     </div>
 
     <!-- Вкладки -->
     <div class="tabs">
-      <div class="tab active" data-tab="health">🏃‍♀️ Моё</div>
-      <div class="tab" data-tab="blog">👥 Челленджи</div>
-      <div class="tab" data-tab="art">🌍 Лидеры</div>
+      <div class="tab active" data-tab="quests">⚔️ Квесты</div>
+      <div class="tab" data-tab="challenges">👥 Челленджи</div>
+      <div class="tab" data-tab="leaders">🌍 Лидеры</div>
     </div>
 
     <!-- Контент -->
-    <div class="pixel-box" id="mainContent"></div>
+    <div class="card fade-in" id="mainContent"></div>
 
     <!-- Модальное окно -->
     <div class="modal-overlay hidden" id="modal">
