@@ -561,5 +561,4 @@ document.querySelectorAll('.tab').forEach(t => {
 });
 
 // СТАРТ
-// СТАРТ
 console.log('🧝‍♀️ ТРОПА готова!');
