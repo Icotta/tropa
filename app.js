@@ -1,6 +1,6 @@
 // === ТРОПА — СОЦИАЛЬНАЯ RPG ===
 
-// 🔥 ТВОИ КЛЮЧИ
+// ТВОИ КЛЮЧИ
 const firebaseConfig = {
   apiKey: "AIzaSyBHR5cw6QvYwU7FJHDu6gDo3I4xk8WaJvo",
   authDomain: "tropa-3b2a9.firebaseapp.com",
@@ -15,48 +15,66 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// === СОСТОЯНИЕ ===
+// Состояние
 let G = {
   hero: { level: 1, hp: 60, maxHp: 60, mana: 40, maxMana: 40, skill: 10, maxSkill: 100 },
   log: [],
   userId: null,
-  nickname: '',
-  email: ''
+  nickname: ''
 };
 
 let tab = 'health';
 
-// === АВТОРИЗАЦИЯ ===
+// Прячем/показываем экраны
+function showAuth() {
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+}
+
+function showApp() {
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+}
+
+// АВТОРИЗАЦИЯ
 auth.onAuthStateChanged(async (user) => {
+  console.log('Auth state changed:', user ? user.uid : 'no user');
+  
   if (user) {
     G.userId = user.uid;
-    G.email = user.email || '';
     
     // Загружаем данные
-    const doc = await db.collection('heroes').doc(G.userId).get();
-    if (doc.exists) {
-      const data = doc.data();
-      G.hero = data.hero || G.hero;
-      G.nickname = data.nickname || user.email?.split('@')[0] || 'Герой';
-      G.log = data.log || [];
-    } else {
-      G.nickname = user.email?.split('@')[0] || user.displayName || 'Герой';
-      await saveAll();
+    try {
+      const doc = await db.collection('heroes').doc(G.userId).get();
+      if (doc.exists) {
+        const data = doc.data();
+        G.hero = data.hero || G.hero;
+        G.nickname = data.nickname || user.email?.split('@')[0] || 'Герой';
+        G.log = data.log || [];
+      } else {
+        G.nickname = user.email?.split('@')[0] || user.displayName || 'Герой_' + Math.floor(Math.random() * 9999);
+        await saveAll();
+      }
+    } catch(e) {
+      console.error('Ошибка загрузки:', e);
+      G.nickname = 'Герой';
     }
     
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('authBox').innerHTML = 
-      `🟢 ${G.nickname} (Ур.${G.hero.level}) | <span class="inline-btn" onclick="auth.signOut()">Выйти</span>`;
+      `🟢 ${G.nickname} (Ур.${G.hero.level}) | <span class="inline-btn" onclick="logout()">Выйти</span>`;
     
+    showApp();
     renderAll();
   } else {
-    document.getElementById('authScreen').classList.remove('hidden');
-    document.getElementById('mainApp').classList.add('hidden');
+    showAuth();
   }
 });
 
-// === МЕТОДЫ ВХОДА ===
+function logout() {
+  auth.signOut();
+}
+
+// МЕТОДЫ ВХОДА
 async function loginEmail() {
   const email = document.getElementById('emailInput').value.trim();
   const pass = document.getElementById('passInput').value;
@@ -72,11 +90,11 @@ async function registerEmail() {
   const email = document.getElementById('emailInput').value.trim();
   const pass = document.getElementById('passInput').value;
   if (!email || !pass) return showError('Заполни email и пароль');
-  if (pass.length < 6) return showError('Пароль должен быть не менее 6 символов');
+  if (pass.length < 6) return showError('Пароль — минимум 6 символов');
   try {
     await auth.createUserWithEmailAndPassword(email, pass);
   } catch (e) {
-    showError('Ошибка: ' + (e.message || 'попробуй другой email'));
+    showError('Ошибка: ' + e.message);
   }
 }
 
@@ -85,7 +103,13 @@ async function loginGoogle() {
   try {
     await auth.signInWithPopup(provider);
   } catch (e) {
-    showError('Ошибка входа через Google');
+    console.error(e);
+    // Пробуем через редирект (для телефона)
+    try {
+      await auth.signInWithRedirect(provider);
+    } catch(e2) {
+      showError('Ошибка входа через Google');
+    }
   }
 }
 
@@ -102,18 +126,21 @@ function showError(msg) {
   setTimeout(() => document.getElementById('authError').textContent = '', 3000);
 }
 
-// === СОХРАНЕНИЕ ===
+// СОХРАНЕНИЕ
 async function saveAll() {
-  await db.collection('heroes').doc(G.userId).set({
-    hero: G.hero,
-    nickname: G.nickname,
-    email: G.email,
-    log: G.log.slice(0, 50),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  try {
+    await db.collection('heroes').doc(G.userId).set({
+      hero: G.hero,
+      nickname: G.nickname,
+      log: G.log.slice(0, 50),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch(e) {
+    console.error('Ошибка сохранения:', e);
+  }
 }
 
-// === ОТРИСОВКА ПЕРСОНАЖА ===
+// ОТРИСОВКА ПЕРСОНАЖА
 function drawSprite() {
   const grid = document.getElementById('sprite');
   if (!grid) return;
@@ -148,13 +175,12 @@ function drawSprite() {
   });
 }
 
-// === ТИТУЛ ===
 function updateTitle() {
   const titles = ['🌱 Росток', '🌿 Побег', '🪴 Кустик', '🌸 Цветок', '🌳 Дерево', '✨ Звезда', '🌟 Созвездие', '👑 Легенда'];
   document.getElementById('title').textContent = titles[Math.min(G.hero.level - 1, titles.length - 1)] || '👑 Бог';
 }
 
-// === РЕНДЕР ===
+// РЕНДЕР
 async function renderAll() {
   drawSprite();
   updateTitle();
@@ -173,10 +199,10 @@ async function renderAll() {
   if (tab === 'health') {
     mc.innerHTML = `
       <h2>📋 Мои квесты</h2>
-      <div id="myQuests"></div>
+      <div id="myQuests">Загрузка...</div>
       <button class="btn" onclick="addPersonalQuest()">➕ Добавить квест</button>
       <button class="btn green" onclick="newDay()">🌅 Новый день</button>
-      <div class="log-box" id="logBox" style="margin-top:8px;">${(G.log || []).slice(0, 10).join('<br>')}</div>
+      <div class="log-box" style="margin-top:8px;" id="logBox">${(G.log || []).slice(0, 10).join('<br>')}</div>
     `;
     loadMyQuests();
   } else if (tab === 'blog') {
@@ -184,43 +210,46 @@ async function renderAll() {
       <h2>👥 Челленджи</h2>
       <button class="btn gold" onclick="showCreateChallenge()">🏆 Создать челлендж</button>
       <button class="btn blue" onclick="joinChallenge()">🔗 Войти по коду</button>
-      <div id="myChallenges"><p style="font-size:10px;color:#888;">Загрузка...</p></div>
+      <div id="myChallenges">Загрузка...</div>
     `;
     loadMyChallenges();
   } else if (tab === 'art') {
     mc.innerHTML = `
       <h2>🌍 Доска лидеров</h2>
-      <div id="leaderboard"><p style="font-size:10px;color:#888;">Загрузка...</p></div>
+      <div id="leaderboard">Загрузка...</div>
     `;
     loadLeaderboard();
   }
 }
 
-// === КВЕСТЫ ===
+// КВЕСТЫ
 async function loadMyQuests() {
-  const doc = await db.collection('heroes').doc(G.userId).get();
-  const quests = doc.exists && doc.data().quests ? doc.data().quests : getDefaultQuests();
-  const el = document.getElementById('myQuests');
-  if (!el) return;
-  
-  el.innerHTML = quests.map((q, i) => `
-    <div class="quest-card ${q.done ? 'done' : ''}" onclick="${q.done ? '' : `doQuest(${i})`}">
-      <div class="quest-icon">${q.done ? '✅' : q.cat === 'health' ? '🏃‍♀️' : q.cat === 'blog' ? '✍️' : '🎨'}</div>
-      <div class="quest-info">
-        <div class="quest-name">${q.name}</div>
-        <div class="quest-reward">+${q.reward?.skill || 3} креатив</div>
+  try {
+    const doc = await db.collection('heroes').doc(G.userId).get();
+    const quests = doc.exists && doc.data().quests ? doc.data().quests : getDefaultQuests();
+    const el = document.getElementById('myQuests');
+    if (!el) return;
+    
+    el.innerHTML = quests.map((q, i) => `
+      <div class="quest-card ${q.done ? 'done' : ''}" onclick="${q.done ? '' : `doQuest(${i})`}">
+        <div class="quest-icon">${q.done ? '✅' : q.cat === 'health' ? '🏃‍♀️' : q.cat === 'blog' ? '✍️' : '🎨'}</div>
+        <div class="quest-info">
+          <div class="quest-name">${q.name}</div>
+          <div class="quest-reward">+${q.reward?.skill || 3} креатив</div>
+        </div>
       </div>
-    </div>
-  `).join('');
-  
-  G._quests = quests;
+    `).join('');
+    
+    G._quests = quests;
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 function getDefaultQuests() {
   return [
     { name: 'Прогулка 30 минут', cat: 'health', reward: { hp: 5, skill: 3 }, done: false },
     { name: 'Выпить 2л воды', cat: 'health', reward: { hp: 3, skill: 2 }, done: false },
-    { name: 'Сделать растяжку', cat: 'health', reward: { hp: 4, skill: 2 }, done: false },
     { name: 'Написать пост', cat: 'blog', reward: { mana: -5, skill: 10 }, done: false },
     { name: 'Рисовать 20 минут', cat: 'art', reward: { mana: -8, skill: 12 }, done: false },
   ];
@@ -229,7 +258,7 @@ function getDefaultQuests() {
 async function doQuest(index) {
   const doc = await db.collection('heroes').doc(G.userId).get();
   const quests = doc.exists && doc.data().quests ? doc.data().quests : getDefaultQuests();
-  if (quests[index].done) return;
+  if (!quests[index] || quests[index].done) return;
   
   quests[index].done = true;
   const r = quests[index].reward || { skill: 3 };
@@ -297,7 +326,7 @@ function addLog(msg) {
   if (G.log.length > 50) G.log.length = 50;
 }
 
-// === ЧЕЛЛЕНДЖИ ===
+// ЧЕЛЛЕНДЖИ
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -311,14 +340,14 @@ async function showCreateChallenge() {
   modal.classList.remove('hidden');
   content.innerHTML = `
     <h3>🏆 Создать челлендж</h3>
-    <input type="text" id="chName" placeholder="Название (например: 30 дней зарядки)">
+    <input type="text" id="chName" placeholder="Название">
     <textarea id="chDesc" placeholder="Описание..."></textarea>
     <select id="chCat">
       <option value="health">🏃‍♀️ Здоровье</option>
       <option value="blog">✍️ Блог</option>
       <option value="art">🎨 Арт</option>
     </select>
-    <input type="number" id="chDays" placeholder="Дней (например: 30)" value="30" min="1" max="365">
+    <input type="number" id="chDays" placeholder="Дней" value="30" min="1" max="365">
     <button class="btn gold" onclick="createChallenge()">🏆 Создать</button>
     <button class="btn" onclick="closeModal()">Отмена</button>
   `;
@@ -351,7 +380,7 @@ async function createChallenge() {
   
   addLog(`🏆 Челлендж "${name}" создан!`);
   closeModal();
-  alert(`Челлендж создан! Код для приглашения:\n\n${code}\n\nОтправь этот код друзьям!`);
+  alert(`Код для приглашения:\n\n${code}\n\nОтправь друзьям!`);
   renderAll();
 }
 
@@ -363,13 +392,13 @@ async function joinChallenge() {
     .where('code', '==', code.toUpperCase())
     .limit(1).get();
   
-  if (snapshot.empty) return alert('❌ Челлендж не найден!');
+  if (snapshot.empty) return alert('❌ Не найден!');
   
   const doc = snapshot.docs[0];
   const data = doc.data();
   
   if (data.participants[G.userId]) {
-    alert('Ты уже в этом челлендже!');
+    alert('Ты уже участвуешь!');
     return;
   }
   
@@ -379,47 +408,48 @@ async function joinChallenge() {
     joinedAt: new Date().toISOString()
   };
   
-  await db.collection('challenges').doc(doc.id).update({
-    participants: data.participants
-  });
-  
+  await db.collection('challenges').doc(doc.id).update({ participants: data.participants });
   addLog(`👥 Присоединился к "${data.name}"!`);
   renderAll();
 }
 
 async function loadMyChallenges() {
-  const snapshot = await db.collection('challenges')
-    .where(`participants.${G.userId}.nickname`, '!=', '')
-    .get();
-  
-  const el = document.getElementById('myChallenges');
-  if (!el) return;
-  
-  if (snapshot.empty) {
-    el.innerHTML = '<p style="font-size:10px;color:#888;">Пока нет челленджей. Создай свой или введи код друга!</p>';
-    return;
-  }
-  
-  el.innerHTML = snapshot.docs.map(d => {
-    const data = d.data();
-    const myProgress = data.participants[G.userId]?.progress || 0;
-    const percent = Math.round((myProgress / data.days) * 100);
-    const participantCount = Object.keys(data.participants).length;
+  try {
+    const snapshot = await db.collection('challenges')
+      .where(`participants.${G.userId}.nickname`, '!=', '')
+      .get();
     
-    return `
-      <div class="quest-card" onclick="openChallenge('${d.id}')">
-        <div class="quest-icon">🏆</div>
-        <div class="quest-info">
-          <div class="quest-name">${data.name}</div>
-          <div class="quest-meta">
-            <span>👥 ${participantCount} участников</span>
-            <span>📊 ${percent}% (${myProgress}/${data.days} дн)</span>
-            <span style="color:#888; font-size:9px;">Код: ${data.code}</span>
+    const el = document.getElementById('myChallenges');
+    if (!el) return;
+    
+    if (snapshot.empty) {
+      el.innerHTML = '<p style="font-size:10px;color:#888;">Пока нет челленджей. Создай свой или введи код друга!</p>';
+      return;
+    }
+    
+    el.innerHTML = snapshot.docs.map(d => {
+      const data = d.data();
+      const myProgress = data.participants[G.userId]?.progress || 0;
+      const percent = Math.round((myProgress / data.days) * 100);
+      const count = Object.keys(data.participants).length;
+      
+      return `
+        <div class="quest-card" onclick="openChallenge('${d.id}')">
+          <div class="quest-icon">🏆</div>
+          <div class="quest-info">
+            <div class="quest-name">${data.name}</div>
+            <div class="quest-meta">
+              <span>👥 ${count} уч.</span>
+              <span>📊 ${percent}%</span>
+              <span style="color:#888;">Код: ${data.code}</span>
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 async function openChallenge(chId) {
@@ -434,29 +464,28 @@ async function openChallenge(chId) {
   
   content.innerHTML = `
     <h3>🏆 ${data.name}</h3>
-    <p style="font-size:10px;color:#888;">${data.desc || ''}</p>
-    <p style="font-size:10px;">Код: <b style="color:#ffd700;">${data.code}</b> | ${data.days} дней</p>
+    <p style="font-size:10px;">Код: <b style="color:#ffd700;">${data.code}</b> | ${data.days} дн.</p>
     
-    <h4 style="color:#ffd700; margin-top:8px;">Участники:</h4>
+    <h4 style="color:#ffd700;">Участники:</h4>
     ${participants.map(p => `
       <div class="player-row ${p.nickname === G.nickname ? 'me' : ''}">
         <span>${p.nickname}</span>
-        <span>${p.progress || 0}/${data.days} дн (${Math.round((p.progress || 0)/data.days*100)}%)</span>
+        <span>${p.progress || 0}/${data.days} (${Math.round((p.progress || 0)/data.days*100)}%)</span>
       </div>
     `).join('')}
     
-    <h4 style="color:#ffd700; margin-top:10px;">💬 Чат челленджа:</h4>
-    <div id="chatBox" style="max-height:120px; overflow-y:auto; margin:6px 0;">
+    <h4 style="color:#ffd700;">💬 Чат:</h4>
+    <div id="chatBox" style="max-height:100px; overflow-y:auto;">
       ${(data.messages || []).slice(-20).map(m => `
         <div class="chat-msg"><span class="author">${m.author}:</span> ${m.text}</div>
       `).join('')}
     </div>
-    <div style="display:flex; gap:4px;">
+    <div style="display:flex; gap:4px; margin-top:4px;">
       <input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1;">
-      <button class="btn" style="width:auto; padding:8px 12px;" onclick="sendChat('${chId}')">📩</button>
+      <button class="btn" style="width:auto; padding:8px;" onclick="sendChat('${chId}')">📩</button>
     </div>
     
-    <button class="btn green" style="margin-top:8px;" onclick="progressChallenge('${chId}')">✅ Я выполнил день!</button>
+    <button class="btn green" style="margin-top:6px;" onclick="progressChallenge('${chId}')">✅ +1 день</button>
     <button class="btn" onclick="closeModal()">Закрыть</button>
   `;
 }
@@ -473,7 +502,7 @@ async function sendChat(chId) {
   
   await db.collection('challenges').doc(chId).update({ messages });
   input.value = '';
-  openChallenge(chId); // Обновить чат
+  openChallenge(chId);
 }
 
 async function progressChallenge(chId) {
@@ -482,10 +511,7 @@ async function progressChallenge(chId) {
   const participants = data.participants;
   
   if (participants[G.userId]) {
-    participants[G.userId].progress = (participants[G.userId].progress || 0) + 1;
-    if (participants[G.userId].progress > data.days) {
-      participants[G.userId].progress = data.days;
-    }
+    participants[G.userId].progress = Math.min(data.days, (participants[G.userId].progress || 0) + 1);
   }
   
   await db.collection('challenges').doc(chId).update({ participants });
@@ -493,37 +519,38 @@ async function progressChallenge(chId) {
   openChallenge(chId);
 }
 
-// === ЛИДЕРЫ ===
+// ЛИДЕРЫ
 async function loadLeaderboard() {
-  const snapshot = await db.collection('heroes')
-    .orderBy('hero.level', 'desc')
-    .limit(20)
-    .get();
-  
-  const el = document.getElementById('leaderboard');
-  if (!el) return;
-  
-  if (snapshot.empty) {
-    el.innerHTML = '<p style="font-size:10px;color:#888;">Пока нет данных</p>';
-    return;
+  try {
+    const snapshot = await db.collection('heroes')
+      .orderBy('hero.level', 'desc')
+      .limit(20)
+      .get();
+    
+    const el = document.getElementById('leaderboard');
+    if (!el) return;
+    
+    if (snapshot.empty) {
+      el.innerHTML = '<p style="font-size:10px;color:#888;">Пока пусто</p>';
+      return;
+    }
+    
+    el.innerHTML = snapshot.docs.map((d, i) => {
+      const data = d.data();
+      const isMe = d.id === G.userId;
+      return `
+        <div class="player-row ${isMe ? 'me' : ''}">
+          <span>${i + 1}. ${data.nickname || '???'}</span>
+          <span>Ур.${data.hero?.level || 1}</span>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    console.error(e);
   }
-  
-  let html = '';
-  snapshot.docs.forEach((d, i) => {
-    const data = d.data();
-    const isMe = d.id === G.userId;
-    html += `
-      <div class="player-row ${isMe ? 'me' : ''}">
-        <span>${i + 1}. ${data.nickname || 'Герой'}</span>
-        <span>Ур.${data.hero?.level || 1} | 💪${data.hero?.skill || 0}</span>
-      </div>
-    `;
-  });
-  
-  el.innerHTML = html;
 }
 
-// === ВКЛАДКИ ===
+// ВКЛАДКИ
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -533,5 +560,6 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
-// === ЗАПУСК ===
+// СТАРТ
+showAuth();
 console.log('🧝‍♀️ ТРОПА готова!');
