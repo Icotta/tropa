@@ -247,12 +247,10 @@ function getDefaultQuests() {
 }
 
 async function doQuest(index) {
-  const doc = await db.collection('heroes').doc(G.userId).get();
-  const quests = doc.exists && doc.data().quests ? doc.data().quests : getDefaultQuests();
-  if (!quests[index] || quests[index].done) return;
+  if (!G._quests || !G._quests[index] || G._quests[index].done) return;
   
-  quests[index].done = true;
-  const r = quests[index].reward || { skill: 3 };
+  G._quests[index].done = true;
+  const r = G._quests[index].reward || { skill: 3 };
   
   if (r.hp) G.hero.hp = Math.min(G.hero.maxHp, G.hero.hp + r.hp);
   if (r.mana) G.hero.mana = Math.min(G.hero.maxMana, G.hero.mana + r.mana);
@@ -269,6 +267,21 @@ async function doQuest(index) {
       addLog(`🎉 НОВЫЙ УРОВЕНЬ ${G.hero.level}!`);
     }
   }
+  
+  addLog(`✅ "${G._quests[index].name}" выполнено!`);
+  
+  // Мгновенно обновляем
+  renderMyQuestsInstant();
+  document.getElementById('logBox').innerHTML = (G.log || []).slice(0, 10).join('<br>');
+  updateStats();
+  
+  // Сохраняем в фоне
+  db.collection('heroes').doc(G.userId).set({ 
+    hero: G.hero, 
+    quests: G._quests,
+    log: G.log.slice(0, 50)
+  }, { merge: true }).catch(() => {});
+}
   
   addLog(`✅ "${quests[index].name}" выполнено!`);
   
@@ -303,19 +316,21 @@ async function addPersonalQuest() {
 }
 
 async function newDay() {
-  const doc = await db.collection('heroes').doc(G.userId).get();
-  const quests = doc.exists && doc.data().quests ? doc.data().quests : getDefaultQuests();
-  quests.forEach(q => q.done = false);
+  G._quests.forEach(q => q.done = false);
   G.hero.mana = G.hero.maxMana;
+  addLog('🌅 Новый день! Мана восстановлена.');
   
-  await db.collection('heroes').doc(G.userId).set({ 
-    quests, 
+  // Мгновенно обновляем
+  renderMyQuestsInstant();
+  document.getElementById('logBox').innerHTML = (G.log || []).slice(0, 10).join('<br>');
+  updateStats();
+  
+  // Сохраняем в фоне
+  db.collection('heroes').doc(G.userId).set({ 
+    quests: G._quests, 
     hero: G.hero,
     log: G.log.slice(0, 50)
-  }, { merge: true });
-  
-  addLog('🌅 Новый день! Мана восстановлена.');
-  renderAll();
+  }, { merge: true }).catch(() => {});
 }
 
 function addLog(msg) {
@@ -557,6 +572,34 @@ document.querySelectorAll('.tab').forEach(t => {
     renderAll();
   });
 });
+
+// Быстрое обновление квестов (без запроса к серверу)
+function renderMyQuestsInstant() {
+  const el = document.getElementById('myQuests');
+  if (!el || !G._quests) return;
+  
+  el.innerHTML = G._quests.map((q, i) => `
+    <div class="quest-card ${q.done ? 'done' : ''}" onclick="${q.done ? '' : `doQuest(${i})`}">
+      <div class="quest-icon">${q.done ? '✅' : q.cat === 'health' ? '🏃‍♀️' : q.cat === 'blog' ? '✍️' : '🎨'}</div>
+      <div class="quest-info">
+        <div class="quest-name">${q.name}</div>
+        <div class="quest-reward">+${q.reward?.skill || 3} креатив</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Быстрое обновление статов
+function updateStats() {
+  document.getElementById('lvl').textContent = G.hero.level;
+  document.getElementById('hpText').textContent = `${G.hero.hp}/${G.hero.maxHp}`;
+  document.getElementById('manaText').textContent = `${G.hero.mana}/${G.hero.maxMana}`;
+  document.getElementById('skillText').textContent = `${G.hero.skill}/${G.hero.maxSkill}`;
+  document.getElementById('hpBar').style.width = (G.hero.hp / G.hero.maxHp * 100) + '%';
+  document.getElementById('manaBar').style.width = (G.hero.mana / G.hero.maxMana * 100) + '%';
+  document.getElementById('skillBar').style.width = (G.hero.skill / G.hero.maxSkill * 100) + '%';
+  document.getElementById('title').textContent = ['🌱 Росток','🌿 Побег','🪴 Кустик','🌸 Цветок','🌳 Дерево','✨ Звезда','🌟 Созвездие','👑 Легенда'][Math.min(G.hero.level-1,7)] || '👑 Бог';
+}
 
 // СТАРТ
 document.getElementById('modal').style.display = 'none';
