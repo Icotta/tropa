@@ -561,5 +561,5 @@ document.querySelectorAll('.tab').forEach(t => {
 });
 
 // СТАРТ
-showAuth();
+// СТАРТ
 console.log('🧝‍♀️ ТРОПА готова!');
