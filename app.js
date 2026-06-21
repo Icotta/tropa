@@ -286,13 +286,20 @@ async function addPersonalQuest() {
   if (!name) return;
   const cat = prompt('Категория (health/blog/art):', 'health') || 'health';
   
-  const doc = await db.collection('heroes').doc(G.userId).get();
-  const quests = doc.exists && doc.data().quests ? doc.data().quests : getDefaultQuests();
-  quests.push({ name, cat, reward: { skill: 5 }, done: false });
-  
-  await db.collection('heroes').doc(G.userId).set({ quests }, { merge: true });
+  // Мгновенно показываем
+  if (!G._quests) G._quests = getDefaultQuests();
+  G._quests.push({ name, cat, reward: { skill: 5 }, done: false });
   addLog(`📋 Новый квест: "${name}"`);
-  renderAll();
+  
+  // Быстро перерисовываем
+  renderMyQuestsInstant();
+  document.getElementById('logBox').innerHTML = (G.log || []).slice(0, 10).join('<br>');
+  
+  // Сохраняем в фоне
+  db.collection('heroes').doc(G.userId).set({ 
+    quests: G._quests,
+    log: G.log.slice(0, 50)
+  }, { merge: true }).catch(() => {});
 }
 
 async function newDay() {
